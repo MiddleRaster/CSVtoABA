@@ -2,12 +2,12 @@
 {
     public class Program
     {
-        private static bool WriteError(string message)
+        private static int WriteError(string message)
         {
             Console.WriteLine(message);
-            return false;
+            return -1;
         }
-        private static bool Validate(string csvPath)
+        private static int Validate(string csvPath)
         {
             using (var sr = new StreamReader(csvPath))
             {
@@ -48,7 +48,7 @@
                     if (!DateTime.TryParse(parts[2], out _))
                         return WriteError("Error: Third field must be a date or blank.");
 
-                return true;
+                return 0;
             }
         }
 
@@ -97,19 +97,14 @@
             return map;
         }
 
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
             if (args.Length < 1)
-            {
-                Console.Error.WriteLine("Usage: CSVtoABA.exe <file.csv> [optional end date]");
-                return;
-            }
+                return WriteError("Usage: CSVtoABA.exe <file.csv> [optional end date]");
+
             string csvPath = args[0];
             if (!File.Exists(csvPath))
-            {
-                Console.Error.WriteLine($"File not found: {csvPath}");
-                return;
-            }
+                return WriteError($"File not found: {csvPath}");
 
             DateTime endDate;
             if (args.Length >= 2 && DateTime.TryParse(args[1], out var parsed))
@@ -117,18 +112,21 @@
             else
                 endDate = DateTime.Now;
 
-            if (Validate(csvPath) == false)
-                return;
+            if (Validate(csvPath) != 0)
+                return -1;
 
             var map = ComputeABA(csvPath, endDate);
 
             // output to screen for now
             Console.WriteLine("Date,Average Age of Open Bugs,Count of Open Bugs");
-            foreach (var day in map.Keys.OrderBy(d => d))
+            for (DateTime day=map.Keys.Min(); day<=endDate.Date; day=day.AddDays(1))
             {
-                var (aba, count) = map[day];
-                Console.WriteLine($"{day:yyyy-MM-dd},{aba:F6},{count}");
+                if (map.TryGetValue(day, out var entry))
+                    Console.WriteLine($"{day:yyyy-MM-dd},{entry.sumAges:F6},{entry.count}");
+                else
+                    Console.WriteLine($"{day:yyyy-MM-dd},0.0,0");
             }
+            return 0;
         }
     }
 }
