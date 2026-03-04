@@ -65,7 +65,7 @@
                     string[] parts = line.Split(',');
                     if (parts.Length != 3)
                     {
-                        WriteError("malformed line {line}; continuing anyway");
+                        WriteError($"malformed line {line}; continuing anyway");
                         continue;
                     }
 
