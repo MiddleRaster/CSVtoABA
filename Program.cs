@@ -105,16 +105,14 @@
             string csvPath = args[0];
             if (!File.Exists(csvPath))
                 return WriteError($"File not found: {csvPath}");
+            if (Validate(csvPath) != 0)
+                return WriteError($"Invalid file: {csvPath}");
 
             DateTime endDate;
             if (args.Length >= 2 && DateTime.TryParse(args[1], out var parsed))
                 endDate = parsed;
             else
                 endDate = DateTime.Now;
-
-            if (Validate(csvPath) != 0)
-                return -1;
-
             var map = ComputeABA(csvPath, endDate);
 
             // output to screen for now
